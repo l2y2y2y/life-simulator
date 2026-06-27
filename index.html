@@ -2,8 +2,11 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>人生模拟器 - 重开你的人生</title>
+  <!-- Google Fonts (mirror) -->
+  <link rel="preconnect" href="https://fonts.loli.net">
+  <link href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,8 +54,15 @@
       border-radius: 2px;
     }
   </style>
+  <meta name="theme-color" content="#0d0d12">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
+  <div class="landscape-warning" id="landscapeWarning">
+    <div class="rotate-icon">🔄</div>
+    <p>请竖屏使用以获得最佳体验</p>
+  </div>
   <!-- 加载画面 -->
   <div class="loading-screen" id="loadingScreen">
     <div class="loading-text">正在加载人生...</div>
@@ -178,14 +188,21 @@
               <div class="stage-display" id="stageDisplay">婴幼儿期</div>
             </div>
             <div class="game-controls">
+              <button class="btn btn-icon toggle-sidebar-btn" id="toggleSidebarBtn">📊</button>
               <button class="btn btn-secondary control-btn" id="pauseBtn">暂停</button>
               <button class="btn btn-secondary control-btn" id="skipBtn">跳过</button>
+              <div class="speed-control" id="speedControl">
+                <button class="speed-btn" data-speed="0.5">0.5x</button>
+                <button class="speed-btn active" data-speed="1">1x</button>
+                <button class="speed-btn" data-speed="2">2x</button>
+              </div>
             </div>
           </div>
 
           <div class="event-area" id="eventArea"></div>
           
           <div class="history-area" id="historyArea"></div>
+          <div class="history-toggle" id="historyToggle">查看历史记录 (0) ▼</div>
         </div>
       </div>
     </div>
@@ -212,14 +229,19 @@
         <div class="share-card-content" id="shareContent"></div>
         <div class="share-card-score" id="shareScore">0分</div>
       </div>
-      <div class="share-preview" id="sharePreview" style="display:none">
-        <canvas id="shareCanvas" width="750" height="1000"></canvas>
+      <div class="share-preview" id="sharePreview">
+        <canvas id="shareCanvas" width="750" height="1000" style="display:none;"></canvas>
+        <img id="shareImage" alt="分享卡片" style="max-width:100%;height:auto;border-radius:16px;">
       </div>
-      <button class="btn btn-primary start-btn" id="restartBtn">重开人生</button>
-      <button class="btn btn-secondary" id="downloadCardBtn">下载分享卡片</button>
-      <button class="btn btn-secondary" id="challengeBtn">挑战模式（复制种子码）</button>
-      <button class="btn btn-secondary" id="shareBtn">分享结果</button>
-      <button class="btn btn-text" id="homeBtn">返回首页</button>
+      <div class="result-actions-primary">
+        <button class="btn btn-primary start-btn" id="restartBtn">重开人生</button>
+        <button class="btn btn-secondary" id="challengeBtn">挑战模式</button>
+      </div>
+      <div class="result-actions-secondary">
+        <button class="btn btn-text" id="downloadCardBtn">下载卡片</button>
+        <button class="btn btn-text" id="shareBtn">分享结果</button>
+        <button class="btn btn-text" id="homeBtn">返回首页</button>
+      </div>
     </div>
 
     <!-- ==================== 成就页 ==================== -->

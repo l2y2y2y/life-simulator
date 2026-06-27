@@ -18,6 +18,13 @@ const PAST_LIFE_ENDINGS = [
   { age: 28, death: '死于突发疾病', regret: '体检报告还放在桌上没来得及看。' },
 ];
 
+// Haptic feedback helper (P2)
+function hapticFeedback(pattern = 10) {
+  if (navigator.vibrate) {
+    navigator.vibrate(pattern);
+  }
+}
+
 class LifeSimulatorApp {
   constructor() {
     this.gameManager = new GameManager();
@@ -71,6 +78,8 @@ class LifeSimulatorApp {
 
     // 新手引导
     this.showTutorial();
+    // Pull-to-rebirth on mobile
+    this.initPullToRebirth();
   }
 
   /**
@@ -118,6 +127,16 @@ class LifeSimulatorApp {
     // 游戏页
     document.getElementById('pauseBtn').addEventListener('click', () => this.togglePause());
     document.getElementById('skipBtn').addEventListener('click', () => this.skipToNextChoice());
+    document.getElementById('toggleSidebarBtn').addEventListener('click', () => this.toggleGameSidebar());
+    document.getElementById('historyToggle').addEventListener('click', () => this.toggleHistory());
+    // Speed control
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        this.setGameSpeed(parseFloat(e.target.dataset.speed));
+      });
+    });
 
     // 结局页
     document.getElementById('restartBtn').addEventListener('click', () => this.showTalentPage());
@@ -153,10 +172,12 @@ class LifeSimulatorApp {
     });
 
     this.gameManager.on('onChoice', (result) => {
+      hapticFeedback(10);
       this.displayChoiceResult(result);
     });
 
     this.gameManager.on('onGameOver', (result) => {
+      hapticFeedback([50, 30, 50]);
       this.showResultPage(result);
     });
 
@@ -781,6 +802,11 @@ class LifeSimulatorApp {
     `;
     historyArea.appendChild(item);
     historyArea.scrollTop = historyArea.scrollHeight;
+    // Update toggle button count
+    const toggle = document.getElementById('historyToggle');
+    if (toggle) {
+      toggle.textContent = `查看历史记录 (${historyArea.children.length}) ▼`;
+    }
   }
 
   togglePause() {
@@ -791,6 +817,31 @@ class LifeSimulatorApp {
     } else {
       this.gameManager.pause();
       btn.textContent = '继续';
+    }
+  }
+
+  toggleGameSidebar() {
+    const sidebar = document.querySelector('.game-sidebar');
+    if (sidebar) {
+      sidebar.classList.toggle('expanded');
+    }
+  }
+
+  toggleHistory() {
+    const historyArea = document.getElementById('historyArea');
+    const toggle = document.getElementById('historyToggle');
+    if (historyArea) {
+      historyArea.classList.toggle('expanded');
+      const isExpanded = historyArea.classList.contains('expanded');
+      toggle.textContent = isExpanded ? '收起历史记录 ▲' : `查看历史记录 (${historyArea.children.length}) ▼`;
+    }
+  }
+
+  setGameSpeed(speed) {
+    // Adjust game manager event interval based on speed
+    if (this.gameManager && this.gameManager.eventInterval) {
+      const baseInterval = this.gameManager.eventInterval._baseInterval || 3000;
+      this.gameManager.eventInterval.interval = baseInterval / speed;
     }
   }
 
@@ -918,6 +969,14 @@ class LifeSimulatorApp {
       ctx.drawImage(img, 0, 0);
     };
     img.src = imgData;
+    // Auto-show as img for mobile long-press save
+    setTimeout(() => {
+      const shareImage = document.getElementById('shareImage');
+      if (shareImage) {
+        shareImage.src = canvas.toDataURL('image/png');
+        shareImage.style.display = 'block';
+      }
+    }, 300);
   }
 
   generateSeedCode() {
@@ -930,6 +989,13 @@ class LifeSimulatorApp {
 
   downloadShareCard() {
     const canvas = document.getElementById('shareCanvas');
+    const shareImage = document.getElementById('shareImage');
+    // Show as img for long-press save on mobile
+    if (shareImage && canvas) {
+      shareImage.src = canvas.toDataURL('image/png');
+      shareImage.style.display = 'block';
+    }
+    // Also trigger download
     const link = document.createElement('a');
     link.download = `人生模拟器_${this.gameManager.gameState.age}岁_${this.currentSeedCode || 'share'}.png`;
     link.href = canvas.toDataURL('image/png');
@@ -1014,6 +1080,27 @@ class LifeSimulatorApp {
     `;
     document.body.appendChild(overlay);
     document.getElementById('tutorialCloseBtn').addEventListener('click', () => overlay.remove());
+  }
+
+  initPullToRebirth() {
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    
+    document.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      const diff = e.changedTouches[0].clientY - touchStartY;
+      const elapsed = Date.now() - touchStartTime;
+      const isHomePage = document.getElementById('homePage').classList.contains('active');
+      
+      if (diff > 120 && elapsed < 500 && isHomePage && window.scrollY <= 5) {
+        hapticFeedback(10);
+        this.showRebirthPage();
+      }
+    }, { passive: true });
   }
 }
 
