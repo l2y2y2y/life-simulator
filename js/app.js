@@ -138,6 +138,16 @@ class LifeSimulatorApp {
       });
     });
 
+    // 侧边栏遮罩点击关闭
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener('click', () => {
+        const sidebar = document.querySelector('.game-sidebar');
+        if (sidebar) sidebar.classList.remove('expanded');
+        sidebarOverlay.classList.remove('active');
+      });
+    }
+
     // 结局页
     document.getElementById('restartBtn').addEventListener('click', () => this.showTalentPage());
     document.getElementById('downloadCardBtn').addEventListener('click', () => this.downloadShareCard());
@@ -147,6 +157,17 @@ class LifeSimulatorApp {
 
     // 成就页
     document.getElementById('backFromAchievementBtn').addEventListener('click', () => this.showHomePage());
+
+    // 每日目标折叠
+    const dailyGoalsCard = document.querySelector('.daily-goals-card');
+    if (dailyGoalsCard) {
+      const title = dailyGoalsCard.querySelector('.card-title');
+      if (title) {
+        title.addEventListener('click', () => {
+          dailyGoalsCard.classList.toggle('expanded');
+        });
+      }
+    }
   }
 
   /**
@@ -165,6 +186,8 @@ class LifeSimulatorApp {
 
       this.updateAgeDisplay(data);
       this.updateHiddenAttrsPanel();
+      // 更新移动端属性概览条
+      this.updateAttrOverviewBar();
     });
 
     this.gameManager.on('onEvent', (event) => {
@@ -375,7 +398,7 @@ class LifeSimulatorApp {
       localStorage.setItem('lifeSimulator_dailyGoals', JSON.stringify(this.dailyGoals));
       this.savePlayerData();
       setTimeout(() => {
-        alert(`完成 ${newCompleted} 个每日目标！获得 ${newCompleted * 10} 命运币！`);
+        this.showToast(`完成 ${newCompleted} 个每日目标！获得 ${newCompleted * 10} 命运币！`, 'success');
       }, 500);
     }
   }
@@ -497,8 +520,13 @@ class LifeSimulatorApp {
   }
 
   updateTalentCounter() {
-    document.getElementById('talentCount').textContent = this.selectedTalents.length;
-    document.getElementById('confirmTalentsBtn').disabled = this.selectedTalents.length !== 3;
+    const count = this.selectedTalents.length;
+    const badge = document.getElementById('talentCount');
+    const text = document.getElementById('talentCountText');
+    if (badge) badge.textContent = count;
+    if (text) text.textContent = count;
+    const btn = document.getElementById('confirmTalentsBtn');
+    if (btn) btn.disabled = count !== 3;
   }
 
   confirmTalents() {
@@ -822,8 +850,12 @@ class LifeSimulatorApp {
 
   toggleGameSidebar() {
     const sidebar = document.querySelector('.game-sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
     if (sidebar) {
       sidebar.classList.toggle('expanded');
+    }
+    if (overlay) {
+      overlay.classList.toggle('active');
     }
   }
 
@@ -849,12 +881,102 @@ class LifeSimulatorApp {
     this.gameManager.skipToNextChoice();
   }
 
+  // ==================== 移动端属性概览条 ====================
+
+  updateAttrOverviewBar() {
+    if (!this.gameManager || !this.gameManager.attributeSystem) return;
+    // 兼容：检查 attributeSystem 或 attrSystem
+    const attrSystem = this.gameManager.attributeSystem || this.gameManager.attrSystem;
+    if (!attrSystem) return;
+    const attrs = attrSystem.attributes || {};
+    const row = document.getElementById('attrOverviewRow');
+    if (!row) return;
+    
+    const attrNames = {
+      appearance: '颜值', intelligence: '智力', constitution: '体质',
+      family: '家境', eq: '情商', luck: '运气'
+    };
+    
+    // 只在第一次渲染时创建DOM
+    if (row.children.length === 0) {
+      Object.keys(attrNames).forEach(key => {
+        const item = document.createElement('div');
+        item.className = 'attr-overview-item';
+        item.id = `overview-${key}`;
+        item.innerHTML = `<span class="attr-overview-name">${attrNames[key]}</span><span class="attr-overview-value" id="overviewVal-${key}">${attrs[key] || 0}</span>`;
+        row.appendChild(item);
+      });
+    } else {
+      // 后续只更新数值
+      Object.keys(attrNames).forEach(key => {
+        const valEl = document.getElementById(`overviewVal-${key}`);
+        if (valEl) {
+          const oldVal = parseInt(valEl.textContent);
+          const newVal = attrs[key] || 0;
+          if (oldVal !== newVal) {
+            valEl.textContent = newVal;
+            const item = valEl.closest('.attr-overview-item');
+            if (item) {
+              item.classList.remove('changed-up', 'changed-down');
+              void item.offsetWidth; // 强制重绘
+              item.classList.add(newVal > oldVal ? 'changed-up' : 'changed-down');
+            }
+          }
+        }
+      });
+    }
+    
+    // 更新隐藏属性
+    const hidden = attrSystem.hidden || attrSystem.hiddenAttributes || {};
+    const happiness = hidden.happiness ?? 50;
+    const stress = hidden.stress ?? 0;
+    const health = hidden.health ?? 70;
+    const wealth = hidden.wealth ?? 0;
+    
+    const hBar = document.getElementById('overviewHappinessBar');
+    const sBar = document.getElementById('overviewStressBar');
+    const hlBar = document.getElementById('overviewHealthBar');
+    const wVal = document.getElementById('overviewWealthVal');
+    if (hBar) hBar.style.width = `${Math.min(100, Math.max(0, happiness))}%`;
+    if (sBar) sBar.style.width = `${Math.min(100, Math.max(0, stress))}%`;
+    if (hlBar) hlBar.style.width = `${Math.min(100, Math.max(0, health))}%`;
+    if (wVal) wVal.textContent = this.formatWealth(wealth);
+    
+    // 健康危险状态
+    if (hlBar) {
+      if (health < 30) hlBar.parentElement.classList.add('danger');
+      else hlBar.parentElement.classList.remove('danger');
+    }
+  }
+
+  /**
+   * 格式化财富显示
+   */
+  formatWealth(wealth) {
+    if (wealth >= 100000000) return (wealth / 100000000).toFixed(1) + '亿';
+    if (wealth >= 10000) return (wealth / 10000).toFixed(0) + '万';
+    return wealth.toLocaleString();
+  }
+
   // ==================== 结局页 ====================
 
   renderResult(result) {
     document.getElementById('resultTitle').textContent = result.title;
     document.getElementById('resultSubtitle').textContent = result.subTitle || '';
     document.getElementById('scoreDisplay').textContent = result.totalScore;
+
+    // 计算等级
+    let grade = 'D';
+    const totalScore = result.totalScore || result.scores?.total || 0;
+    if (totalScore >= 90) grade = 'S';
+    else if (totalScore >= 80) grade = 'A';
+    else if (totalScore >= 60) grade = 'B';
+    else if (totalScore >= 40) grade = 'C';
+    const gradeEl = document.getElementById('resultGrade');
+    if (gradeEl) {
+      gradeEl.textContent = grade;
+      gradeEl.className = `result-grade grade-${grade}`;
+    }
 
     // 标签
     const tagsContainer = document.getElementById('resultTags');
@@ -938,9 +1060,9 @@ class LifeSimulatorApp {
     } else {
       // 复制到剪贴板
       navigator.clipboard.writeText(shareText).then(() => {
-        alert('分享文案已复制到剪贴板！');
+        this.showToast('分享文案已复制到剪贴板！', 'success');
       }).catch(() => {
-        alert(shareText);
+        this.showToast(shareText, 'info');
       });
     }
   }
@@ -1006,7 +1128,7 @@ class LifeSimulatorApp {
     if (this.currentSeedCode) {
       const text = `我在【人生模拟器】中活了${this.gameManager.gameState.age}岁，得了${document.getElementById('scoreDisplay').textContent}分！用种子码 ${this.currentSeedCode} 来挑战我吧！`;
       navigator.clipboard.writeText(text).then(() => {
-        alert('挑战种子码已复制！发给朋友让他们来挑战你的分数吧！');
+        this.showToast('挑战种子码已复制！发给朋友让他们来挑战你的分数吧！', 'success');
       }).catch(() => {
         prompt('复制以下内容发给朋友：', text);
       });
@@ -1017,31 +1139,28 @@ class LifeSimulatorApp {
 
   renderAchievementList() {
     const list = document.getElementById('achievementList');
-    const progress = this.gameManager.scoringSystem.getAchievementProgress();
-    
-    document.getElementById('achievementCount').textContent = progress.unlocked;
-    document.getElementById('achievementTotal').textContent = progress.total;
-
+    if (!list) return;
     list.innerHTML = '';
-    ACHIEVEMENTS_DATA.forEach(achievement => {
-      const isUnlocked = this.gameManager.scoringSystem.unlockedAchievements.some(
-        a => a.id === achievement.id
-      );
-
+    const achievements = this.gameManager.achievements || [];
+    let unlockedCount = 0;
+    achievements.forEach(achievement => {
+      const isUnlocked = achievement.unlocked;
+      if (isUnlocked) unlockedCount++;
       const item = document.createElement('div');
-      item.className = 'attribute-item';
-      item.style.opacity = isUnlocked ? '1' : '0.5';
+      item.className = `achievement-item ${isUnlocked ? '' : 'locked'}`;
       item.innerHTML = `
-        <div class="attribute-info">
-          <div class="attribute-name">${achievement.icon} ${achievement.name}</div>
-          <div class="attribute-desc">${achievement.description}</div>
-        </div>
-        <div class="attribute-value">
-          ${isUnlocked ? '已解锁' : '未解锁'}
+        <div class="achievement-item-icon">${achievement.icon}</div>
+        <div class="achievement-item-info">
+          <div class="achievement-item-name">${achievement.name}</div>
+          <div class="achievement-item-desc">${achievement.description}</div>
         </div>
       `;
       list.appendChild(item);
     });
+    const countEl = document.getElementById('achievementCount');
+    const totalEl = document.getElementById('achievementTotal');
+    if (countEl) countEl.textContent = unlockedCount;
+    if (totalEl) totalEl.textContent = achievements.length;
   }
 
   showAchievementPopup(achievements) {
@@ -1062,6 +1181,27 @@ class LifeSimulatorApp {
         popup.remove();
       }, 3000);
     });
+  }
+
+  // ==================== Toast 提示 ====================
+
+  showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    // 触发动画
+    requestAnimationFrame(() => {
+      toast.classList.add('show');
+    });
+    // 自动消失
+    setTimeout(() => {
+      toast.classList.remove('show');
+      toast.classList.add('hide');
+      setTimeout(() => toast.remove(), 300);
+    }, 2500);
   }
 
   showTutorial() {

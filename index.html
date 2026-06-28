@@ -7,10 +7,6 @@
   <!-- Google Fonts (mirror) -->
   <link rel="preconnect" href="https://fonts.loli.net">
   <link href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <style>
     /* 初始加载动画 */
@@ -101,7 +97,9 @@
       
       <div class="card-tertiary daily-goals-card">
         <h3 class="card-title">每日目标</h3>
-        <div id="dailyGoalsContainer"></div>
+        <div class="daily-goals-content">
+          <div id="dailyGoalsContainer"></div>
+        </div>
       </div>
     </div>
 
@@ -131,7 +129,7 @@
             <span id="talentCount">0</span> / 3
           </div>
         </div>
-        <div class="talent-counter">已选择：<span id="talentCount">0</span> / 3</div>
+        <div class="talent-counter">已选择：<span id="talentCountText">0</span> / 3</div>
         <div class="talent-grid" id="talentGrid"></div>
         <button class="btn btn-secondary" id="refreshTalentsBtn">刷新天赋</button>
       </div>
@@ -156,6 +154,9 @@
     <!-- ==================== 游戏进行页 ==================== -->
     <div class="page game-page" id="gamePage">
       <div class="game-layout">
+        <!-- 侧边栏遮罩 -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
         <!-- 左侧栏：属性面板 -->
         <div class="game-sidebar">
           <div class="attributes-panel" id="attributesPanel"></div>
@@ -195,6 +196,29 @@
                 <button class="speed-btn" data-speed="0.5">0.5x</button>
                 <button class="speed-btn active" data-speed="1">1x</button>
                 <button class="speed-btn" data-speed="2">2x</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 移动端属性概览条 -->
+          <div class="attr-overview-bar" id="attrOverviewBar">
+            <div class="attr-overview-row" id="attrOverviewRow"></div>
+            <div class="attr-overview-hidden" id="attrOverviewHidden">
+              <div class="attr-overview-bar-item">
+                <span class="attr-overview-bar-name">快乐</span>
+                <div class="progress-bar attr-overview-bar-track"><div class="progress-fill happiness-fill" id="overviewHappinessBar"></div></div>
+              </div>
+              <div class="attr-overview-bar-item">
+                <span class="attr-overview-bar-name">压力</span>
+                <div class="progress-bar attr-overview-bar-track"><div class="progress-fill stress-fill" id="overviewStressBar"></div></div>
+              </div>
+              <div class="attr-overview-bar-item">
+                <span class="attr-overview-bar-name">健康</span>
+                <div class="progress-bar attr-overview-bar-track"><div class="progress-fill health-fill" id="overviewHealthBar"></div></div>
+              </div>
+              <div class="attr-overview-wealth">
+                <span class="coin-icon">G</span>
+                <span id="overviewWealthVal">0</span>
               </div>
             </div>
           </div>
@@ -257,6 +281,9 @@
 
   <!-- 成就弹窗容器 -->
   <div id="achievementPopupContainer"></div>
+
+  <!-- Toast 提示容器 -->
+  <div id="toastContainer" class="toast-container"></div>
 
   <!-- 脚本文件 -->
   <script src="js/data/talents.js"></script>

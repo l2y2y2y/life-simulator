@@ -137,14 +137,14 @@ class GameManager {
     if (this.autoPlayInterval) {
       clearInterval(this.autoPlayInterval);
     }
-
+    this._baseInterval = 800; // 保存基础间隔
     this.autoPlayInterval = setInterval(() => {
       if (!this.gameState.isPlaying || this.gameState.isPaused || this.gameState.waitingForChoice) {
         return;
       }
 
       this.advanceYear();
-    }, 800); // 每年800毫秒
+    }, this._baseInterval);
   }
 
   /**
