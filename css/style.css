@@ -7,7 +7,7 @@
 /* ==================== 设计系统变量 ==================== */
 :root {
   /* 背景层级 (3 levels) */
-  --bg-base: #0a0a0f;
+  --bg-base: #111118;
   --bg-surface: rgba(22, 22, 30, 0.65);
   --bg-elevated: rgba(30, 30, 42, 0.55);
 
@@ -56,12 +56,12 @@
   --primary-color: #c75c5c;
   --secondary-color: #5cb589;
   --accent-color: #c8a35f;
-  --dark-color: #0a0a0f;
+  --dark-color: #111118;
   --light-color: #e8e4dc;
   --success-color: #5cb589;
   --warning-color: #c4a35a;
   --danger-color: #c75c5c;
-  --bg-color: #0a0a0f;
+  --bg-color: #111118;
   --card-bg: rgba(22, 22, 30, 0.65);
   --text-color: #e8e4dc;
   --text-muted: #9a9590;
@@ -87,21 +87,25 @@ html {
 
 body {
   font-family: var(--font-body);
-  background: #0a0a0f;
+  background: #111118;
   background-image:
-    /* Warm glow bottom-left */
-    radial-gradient(ellipse 600px 400px at 15% 85%, rgba(200, 163, 95, 0.04) 0%, transparent 100%),
+    /* Warm glow bottom-left — 加大范围和强度 */
+    radial-gradient(ellipse 80% 60% at 15% 85%, rgba(200, 163, 95, 0.07) 0%, transparent 100%),
     /* Cool glow top-right */
-    radial-gradient(ellipse 500px 300px at 85% 15%, rgba(107, 143, 181, 0.03) 0%, transparent 100%),
-    /* Center subtle warm */
-    radial-gradient(ellipse 800px 600px at 50% 50%, rgba(200, 163, 95, 0.015) 0%, transparent 100%);
+    radial-gradient(ellipse 60% 50% at 85% 15%, rgba(107, 143, 181, 0.05) 0%, transparent 100%),
+    /* Center warm ambient */
+    radial-gradient(ellipse 100% 80% at 50% 50%, rgba(180, 140, 80, 0.025) 0%, transparent 100%);
+  background-attachment: fixed;
   color: var(--text-primary);
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
+  overflow-y: auto;
   line-height: 1.6;
   position: relative;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Noise texture overlay — subtle grain for premium feel */
@@ -2108,10 +2112,31 @@ body::before {
 
 /* Mobile: <= 768px */
 @media (max-width: 768px) {
+  /* === 基础滚动修复 === */
+  html, body {
+    height: auto !important;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .page {
+    min-height: auto;
+    overflow-y: visible;
+  }
+
+  .page.active {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
   .container {
     padding: 16px;
     padding-left: max(16px, env(safe-area-inset-left));
     padding-right: max(16px, env(safe-area-inset-right));
+    min-height: auto;
+    overflow: visible;
   }
 
   .game-title {
@@ -2125,6 +2150,8 @@ body::before {
 
   .home-page {
     padding-top: 16px;
+    min-height: auto;
+    padding-bottom: 24px;
   }
 
   .statistics-bar {
@@ -2143,6 +2170,8 @@ body::before {
   /* Game sidebar as collapsible overlay panel */
   .game-layout {
     grid-template-columns: 1fr;
+    min-height: auto;
+    overflow: visible;
   }
 
   .game-sidebar {
@@ -2160,7 +2189,9 @@ body::before {
     transform: translateY(-100%);
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     max-height: 60vh;
+    max-height: 60dvh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .game-sidebar.expanded {
@@ -2208,7 +2239,8 @@ body::before {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding-bottom: 8px;
+    padding-bottom: 80px;
+    -webkit-overflow-scrolling: touch;
   }
 
   .talent-card {
