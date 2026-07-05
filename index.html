@@ -154,14 +154,12 @@
     <!-- ==================== 游戏进行页 ==================== -->
     <div class="page game-page" id="gamePage">
       <div class="game-layout">
-        <!-- 侧边栏遮罩 -->
+        <!-- 侧边栏遮罩 (desktop only) -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- 左侧栏：属性面板 -->
+        <!-- 左侧栏：属性面板 (desktop only) -->
         <div class="game-sidebar">
           <div class="attributes-panel" id="attributesPanel"></div>
-
-          <!-- 隐藏属性面板 -->
           <div class="hidden-attrs-panel" id="hiddenAttrsPanel">
             <div class="hidden-attr-item">
               <span class="hidden-attr-name">快乐</span>
@@ -183,6 +181,7 @@
 
         <!-- 右侧主区域 -->
         <div class="game-main">
+          <!-- 顶部信息栏 -->
           <div class="game-header">
             <div>
               <div class="age-display" id="ageDisplay">0岁</div>
@@ -200,33 +199,89 @@
             </div>
           </div>
 
-          <!-- 移动端属性概览条 -->
+          <!-- ====== 移动端 Tab 导航容器 ====== -->
+          <div class="mobile-tab-container" id="mobileTabContainer">
+            <!-- Tab 1: 当前事件 -->
+            <div class="mobile-tab-panel active" data-tab="event" id="mobileTabEvent">
+              <div class="event-area" id="eventArea"></div>
+            </div>
+
+            <!-- Tab 2: 属性面板 -->
+            <div class="mobile-tab-panel" data-tab="attrs" id="mobileTabAttrs">
+              <div class="mobile-attrs-panel">
+                <div class="attr-overview-row" id="attrOverviewRow"></div>
+                <div class="mobile-hidden-attrs">
+                  <div class="mobile-hidden-attr-row">
+                    <span class="attr-overview-bar-name">快乐</span>
+                    <div class="progress-bar attr-overview-bar-track"><div class="progress-fill happiness-fill" id="overviewHappinessBar"></div></div>
+                    <span class="mobile-attr-val" id="overviewHappinessVal">50</span>
+                  </div>
+                  <div class="mobile-hidden-attr-row">
+                    <span class="attr-overview-bar-name">压力</span>
+                    <div class="progress-bar attr-overview-bar-track"><div class="progress-fill stress-fill" id="overviewStressBar"></div></div>
+                    <span class="mobile-attr-val" id="overviewStressVal">0</span>
+                  </div>
+                  <div class="mobile-hidden-attr-row">
+                    <span class="attr-overview-bar-name">健康</span>
+                    <div class="progress-bar attr-overview-bar-track"><div class="progress-fill health-fill" id="overviewHealthBar"></div></div>
+                    <span class="mobile-attr-val" id="overviewHealthVal">70</span>
+                  </div>
+                </div>
+                <div class="mobile-wealth-row">
+                  <span class="coin-icon">G</span>
+                  <span id="overviewWealthVal">0</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 3: 历史记录 -->
+            <div class="mobile-tab-panel" data-tab="history" id="mobileTabHistory">
+              <div class="history-area" id="historyArea"></div>
+            </div>
+          </div>
+
+          <!-- 移动端底部 Tab 栏 -->
+          <nav class="mobile-tab-bar" id="mobileTabBar">
+            <button class="mobile-tab-btn active" data-tab="event">
+              <span class="mobile-tab-icon">📖</span>
+              <span class="mobile-tab-label">当前</span>
+            </button>
+            <button class="mobile-tab-btn" data-tab="attrs">
+              <span class="mobile-tab-icon">📊</span>
+              <span class="mobile-tab-label">属性</span>
+            </button>
+            <button class="mobile-tab-btn" data-tab="history">
+              <span class="mobile-tab-icon">📜</span>
+              <span class="mobile-tab-label">记录</span>
+              <span class="mobile-tab-badge" id="historyBadge" style="display:none">0</span>
+            </button>
+          </nav>
+
+          <!-- 旧版概览条和折叠按钮 — 桌面端保留但隐藏 -->
           <div class="attr-overview-bar" id="attrOverviewBar">
-            <div class="attr-overview-row" id="attrOverviewRow"></div>
+            <div class="attr-overview-row" id="attrOverviewRowDesktop"></div>
             <div class="attr-overview-hidden" id="attrOverviewHidden">
               <div class="attr-overview-bar-item">
                 <span class="attr-overview-bar-name">快乐</span>
-                <div class="progress-bar attr-overview-bar-track"><div class="progress-fill happiness-fill" id="overviewHappinessBar"></div></div>
+                <div class="progress-bar attr-overview-bar-track"><div class="progress-fill happiness-fill" id="overviewHappinessBarDesktop"></div></div>
               </div>
               <div class="attr-overview-bar-item">
                 <span class="attr-overview-bar-name">压力</span>
-                <div class="progress-bar attr-overview-bar-track"><div class="progress-fill stress-fill" id="overviewStressBar"></div></div>
+                <div class="progress-bar attr-overview-bar-track"><div class="progress-fill stress-fill" id="overviewStressBarDesktop"></div></div>
               </div>
               <div class="attr-overview-bar-item">
                 <span class="attr-overview-bar-name">健康</span>
-                <div class="progress-bar attr-overview-bar-track"><div class="progress-fill health-fill" id="overviewHealthBar"></div></div>
+                <div class="progress-bar attr-overview-bar-track"><div class="progress-fill health-fill" id="overviewHealthBarDesktop"></div></div>
               </div>
               <div class="attr-overview-wealth">
                 <span class="coin-icon">G</span>
-                <span id="overviewWealthVal">0</span>
+                <span id="overviewWealthValDesktop">0</span>
               </div>
             </div>
           </div>
 
-          <div class="event-area" id="eventArea"></div>
-          
-          <div class="history-area" id="historyArea"></div>
-          <div class="history-toggle" id="historyToggle">查看历史记录 (0) ▼</div>
+          <div class="history-area" id="historyAreaDesktop"></div>
+          <div class="history-toggle" id="historyToggle">查看历史记录 ▼</div>
         </div>
       </div>
     </div>

@@ -2715,6 +2715,179 @@ body::before {
   .text-2xl {
     font-size: 36px;
   }
+
+  /* ====== MOBILE TAB SYSTEM ====== */
+
+  /* Hide desktop-only elements on mobile */
+  .attr-overview-bar,
+  .history-toggle,
+  .history-area#historyAreaDesktop {
+    display: none !important;
+  }
+
+  /* Show mobile tab container and bar */
+  .mobile-tab-container {
+    display: block !important;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .mobile-tab-bar {
+    display: flex !important;
+    position: sticky;
+    bottom: 0;
+    background: rgba(12, 12, 16, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-radius: 0;
+    padding: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    margin: 0;
+    gap: 0;
+    z-index: 30;
+  }
+
+  .mobile-tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 0;
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: color 0.25s ease;
+    position: relative;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .mobile-tab-btn.active {
+    color: var(--accent-gold);
+  }
+
+  .mobile-tab-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .mobile-tab-label {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+  }
+
+  .mobile-tab-badge {
+    position: absolute;
+    top: 4px;
+    right: calc(50% - 24px);
+    background: var(--accent-gold);
+    color: #0d0d12;
+    font-size: 9px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+  }
+
+  /* Tab panels */
+  .mobile-tab-panel {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 16px;
+  }
+
+  .mobile-tab-panel.active {
+    display: block;
+    animation: tabFadeIn 0.25s ease-out;
+  }
+
+  @keyframes tabFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Tab content: Attributes */
+  .mobile-attrs-panel {
+    padding: 16px 0;
+  }
+
+  .mobile-hidden-attrs {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mobile-hidden-attr-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mobile-attr-val {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 28px;
+    text-align: right;
+  }
+
+  .mobile-wealth-row {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent-gold);
+  }
+
+  /* Tab content: History */
+  .mobile-tab-panel[data-tab="history"] .history-area {
+    max-height: none;
+    overflow: visible;
+    padding-top: 8px;
+  }
+
+  /* Game layout on mobile */
+  .game-layout {
+    grid-template-columns: 1fr;
+    min-height: calc(100vh - 32px);
+    min-height: calc(100dvh - 32px);
+  }
+
+  .game-main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* Game sidebar on mobile — completely hidden */
+  .game-sidebar {
+    display: none !important;
+  }
+
+  /* Hide toggle sidebar button on mobile */
+  .toggle-sidebar-btn {
+    display: none !important;
+  }
 }
 
 /* ==================== 43. 横屏警告 — 仅手机横屏 ==================== */
@@ -2868,7 +3041,13 @@ body::before {
   }
 }
 
-/* ==================== 47. 无障碍：减少动画 ==================== */
+/* ==================== 47. Desktop: hide mobile tab elements ==================== */
+.mobile-tab-container,
+.mobile-tab-bar {
+  display: none;
+}
+
+/* ==================== 48. 无障碍：减少动画 ==================== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

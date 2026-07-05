@@ -168,6 +168,26 @@ class LifeSimulatorApp {
         });
       }
     }
+
+    // Mobile tab switching
+    const tabBtns = document.querySelectorAll('.mobile-tab-btn');
+    const tabPanels = document.querySelectorAll('.mobile-tab-panel');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        // Update buttons
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // Update panels
+        tabPanels.forEach(p => p.classList.remove('active'));
+        const targetPanel = document.querySelector(`.mobile-tab-panel[data-tab="${tab}"]`);
+        if (targetPanel) targetPanel.classList.add('active');
+        // Clear history badge when switching to event tab
+        if (tab === 'event') {
+          this.clearHistoryBadge();
+        }
+      });
+    });
   }
 
   /**
@@ -643,6 +663,9 @@ class LifeSimulatorApp {
     document.getElementById('stageDisplay').textContent = '婴幼儿期';
     document.getElementById('eventArea').innerHTML = '';
     document.getElementById('historyArea').innerHTML = '';
+    const historyAreaDesktop = document.getElementById('historyAreaDesktop');
+    if (historyAreaDesktop) historyAreaDesktop.innerHTML = '';
+    this.clearHistoryBadge();
     this.renderAttributesPanel({
       attributes: this.attributePoints,
       hidden: { happiness: 50, stress: 0, health: 100, wealth: 0 }
@@ -755,6 +778,8 @@ class LifeSimulatorApp {
 
     // 绑定选择按钮事件
     if (event.choices && event.choices.length > 0) {
+      // Auto-switch to event tab when new event with choices arrives
+      this.switchToEventTab();
       card.querySelectorAll('.choice-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const choiceIndex = parseInt(e.target.closest('.choice-btn').dataset.choice);
@@ -822,18 +847,40 @@ class LifeSimulatorApp {
 
   addToHistory(event) {
     const historyArea = document.getElementById('historyArea');
-    const item = document.createElement('div');
-    item.className = 'history-item';
-    item.innerHTML = `
+    const historyAreaDesktop = document.getElementById('historyAreaDesktop');
+    const itemHtml = `
       <span class="history-age">${this.gameManager.gameState.age}岁</span>
       ${event.title}
     `;
-    historyArea.appendChild(item);
-    historyArea.scrollTop = historyArea.scrollHeight;
-    // Update toggle button count
+    const itemClassName = 'history-item';
+
+    // Mobile history (inside tab)
+    if (historyArea) {
+      const item = document.createElement('div');
+      item.className = itemClassName;
+      item.innerHTML = itemHtml;
+      historyArea.appendChild(item);
+      historyArea.scrollTop = historyArea.scrollHeight;
+    }
+
+    // Desktop history
+    if (historyAreaDesktop) {
+      const item = document.createElement('div');
+      item.className = itemClassName;
+      item.innerHTML = itemHtml;
+      historyAreaDesktop.appendChild(item);
+      historyAreaDesktop.scrollTop = historyAreaDesktop.scrollHeight;
+    }
+
+    // Update desktop toggle button count
     const toggle = document.getElementById('historyToggle');
-    if (toggle) {
-      toggle.textContent = `查看历史记录 (${historyArea.children.length}) ▼`;
+    if (toggle && historyAreaDesktop) {
+      toggle.textContent = `查看历史记录 (${historyAreaDesktop.children.length}) ▼`;
+    }
+
+    // Update mobile history badge
+    if (historyArea) {
+      this.updateHistoryBadge(historyArea.children.length);
     }
   }
 
@@ -860,7 +907,7 @@ class LifeSimulatorApp {
   }
 
   toggleHistory() {
-    const historyArea = document.getElementById('historyArea');
+    const historyArea = document.getElementById('historyAreaDesktop');
     const toggle = document.getElementById('historyToggle');
     if (historyArea) {
       historyArea.classList.toggle('expanded');
@@ -947,6 +994,28 @@ class LifeSimulatorApp {
       if (health < 30) hlBar.parentElement.classList.add('danger');
       else hlBar.parentElement.classList.remove('danger');
     }
+
+    // Also update desktop overview bar elements (if they exist)
+    const hBarDesktop = document.getElementById('overviewHappinessBarDesktop');
+    const sBarDesktop = document.getElementById('overviewStressBarDesktop');
+    const hlBarDesktop = document.getElementById('overviewHealthBarDesktop');
+    const wValDesktop = document.getElementById('overviewWealthValDesktop');
+    if (hBarDesktop) hBarDesktop.style.width = `${Math.min(100, Math.max(0, happiness))}%`;
+    if (sBarDesktop) sBarDesktop.style.width = `${Math.min(100, Math.max(0, stress))}%`;
+    if (hlBarDesktop) hlBarDesktop.style.width = `${Math.min(100, Math.max(0, health))}%`;
+    if (wValDesktop) wValDesktop.textContent = this.formatWealth(wealth);
+    if (hlBarDesktop) {
+      if (health < 30) hlBarDesktop.parentElement.classList.add('danger');
+      else hlBarDesktop.parentElement.classList.remove('danger');
+    }
+
+    // Also update mobile tab-specific values
+    const hValMobile = document.getElementById('overviewHappinessVal');
+    const sValMobile = document.getElementById('overviewStressVal');
+    const hlValMobile = document.getElementById('overviewHealthVal');
+    if (hValMobile) hValMobile.textContent = Math.round(happiness);
+    if (sValMobile) sValMobile.textContent = Math.round(stress);
+    if (hlValMobile) hlValMobile.textContent = Math.round(health);
   }
 
   /**
@@ -1220,6 +1289,38 @@ class LifeSimulatorApp {
     `;
     document.body.appendChild(overlay);
     document.getElementById('tutorialCloseBtn').addEventListener('click', () => overlay.remove());
+  }
+
+  // ==================== Mobile Tab Navigation ====================
+
+  switchToEventTab() {
+    const eventBtn = document.querySelector('.mobile-tab-btn[data-tab="event"]');
+    if (eventBtn) {
+      document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.mobile-tab-panel').forEach(p => p.classList.remove('active'));
+      eventBtn.classList.add('active');
+      const panel = document.querySelector('.mobile-tab-panel[data-tab="event"]');
+      if (panel) panel.classList.add('active');
+    }
+  }
+
+  updateHistoryBadge(count) {
+    const badge = document.getElementById('historyBadge');
+    if (badge) {
+      if (count > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = count > 99 ? '99+' : count;
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  }
+
+  clearHistoryBadge() {
+    const badge = document.getElementById('historyBadge');
+    if (badge) {
+      badge.style.display = 'none';
+    }
   }
 
   initPullToRebirth() {
