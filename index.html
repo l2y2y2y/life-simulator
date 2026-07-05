@@ -220,6 +220,32 @@
             </div>
           </div>
 
+          <!-- ====== 始终可见的属性概览条 ====== -->
+          <div class="game-attr-bar" id="gameAttrBar">
+            <div class="attr-bar-row" id="attrBarRow"></div>
+            <div class="attr-bar-status">
+              <div class="attr-bar-status-item">
+                <span class="attr-bar-status-label">快乐</span>
+                <div class="progress-bar attr-bar-progress"><div class="progress-fill happiness-fill" id="barHappiness"></div></div>
+                <span class="attr-bar-status-val" id="barHappinessVal">50</span>
+              </div>
+              <div class="attr-bar-status-item">
+                <span class="attr-bar-status-label">压力</span>
+                <div class="progress-bar attr-bar-progress"><div class="progress-fill stress-fill" id="barStress"></div></div>
+                <span class="attr-bar-status-val" id="barStressVal">0</span>
+              </div>
+              <div class="attr-bar-status-item">
+                <span class="attr-bar-status-label">健康</span>
+                <div class="progress-bar attr-bar-progress"><div class="progress-fill health-fill" id="barHealth"></div></div>
+                <span class="attr-bar-status-val" id="barHealthVal">70</span>
+              </div>
+              <div class="attr-bar-wealth">
+                <span class="coin-icon">G</span>
+                <span id="barWealthVal">0</span>
+              </div>
+            </div>
+          </div>
+
           <!-- ====== 移动端 Tab 导航容器 ====== -->
           <div class="mobile-tab-container" id="mobileTabContainer">
             <!-- Tab 1: 当前事件 -->

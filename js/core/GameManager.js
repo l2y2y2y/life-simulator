@@ -63,7 +63,7 @@ class GameManager {
     // 设置游戏状态
     this.gameState = {
       isPlaying: true,
-      isPaused: false,
+      isPaused: true,  // 初始暂停，用户手动开始
       age: 0,
       talents: talents || [],
       mode: mode,

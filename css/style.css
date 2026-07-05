@@ -3282,28 +3282,48 @@ body::before {
   pointer-events: none;
 }
 
-/* Page indicator dots */
+/* Page indicator: text + arrows */
 .event-page-indicator {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 12px 0 4px;
+  gap: 12px;
+  padding: 10px 0 4px;
 }
 
-.event-page-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--text-tertiary);
-  opacity: 0.4;
-  transition: all 0.25s ease;
+.page-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(22, 22, 30, 0.5);
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.event-page-dot.active {
-  background: var(--accent-gold);
-  opacity: 1;
-  transform: scale(1.3);
-  box-shadow: 0 0 6px rgba(200, 163, 95, 0.4);
+.page-nav-btn:active:not(.disabled) {
+  background: rgba(200, 163, 95, 0.15);
+  color: var(--accent-gold);
+  transform: scale(0.95);
+}
+
+.page-nav-btn.disabled {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.page-nav-text {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  min-width: 50px;
+  text-align: center;
 }
 
 /* Choice button press feedback */
@@ -3495,4 +3515,130 @@ body::before {
 @keyframes historyFadeIn {
   from { opacity: 0; transform: translateX(10px); }
   to { opacity: 1; transform: translateX(0); }
+}
+
+/* ==================== 55. Game Attribute Bar (always visible) ==================== */
+.game-attr-bar {
+  background: rgba(12, 12, 16, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 10px 12px;
+  margin: 0 -16px;
+}
+
+/* 6 属性值一行 */
+.attr-bar-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.attr-bar-item {
+  text-align: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.attr-bar-name {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.attr-bar-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  display: block;
+  transition: color 0.3s ease;
+}
+
+/* 属性值变化闪烁 */
+.attr-bar-value.flash-up {
+  animation: barFlashUp 0.6s ease;
+}
+
+.attr-bar-value.flash-down {
+  animation: barFlashDown 0.6s ease;
+}
+
+@keyframes barFlashUp {
+  0%   { color: var(--accent-gold); transform: scale(1); }
+  30%  { color: #4ade80; transform: scale(1.2); }
+  100% { color: var(--accent-gold); transform: scale(1); }
+}
+
+@keyframes barFlashDown {
+  0%   { color: var(--accent-gold); transform: scale(1); }
+  30%  { color: #f87171; transform: scale(0.85); }
+  100% { color: var(--accent-gold); transform: scale(1); }
+}
+
+/* 状态条区域 */
+.attr-bar-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.attr-bar-status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.attr-bar-status-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  min-width: 20px;
+}
+
+.attr-bar-progress {
+  height: 6px;
+  flex: 1;
+  min-width: 30px;
+}
+
+.attr-bar-status-val {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 20px;
+  text-align: right;
+}
+
+.attr-bar-wealth {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-gold);
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.attr-bar-wealth .coin-icon {
+  width: 14px;
+  height: 14px;
+  font-size: 8px;
+}
+
+/* 桌面端隐藏（桌面有侧边栏） */
+@media (min-width: 769px) {
+  .game-attr-bar {
+    display: none !important;
+  }
 }

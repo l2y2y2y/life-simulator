@@ -750,6 +750,9 @@ class LifeSimulatorApp {
   confirmAttributes() {
     this.showGamePage();
     this.gameManager.startNewGame(this.selectedTalents, this.attributePoints, 'normal');
+    // 游戏初始暂停，按钮显示"继续"
+    const pauseBtn = document.getElementById('pauseBtn');
+    if (pauseBtn) pauseBtn.textContent = '继续';
   }
 
   // ==================== 游戏进行 ====================
@@ -896,6 +899,12 @@ class LifeSimulatorApp {
     if (event.choices && event.choices.length > 0) {
       // Auto-switch to event tab when new event with choices arrives
       this.switchToEventTab();
+      // 有选项：暂停自动推进，等用户手动选择
+      if (this.gameManager && !this.gameManager.gameState.isPaused) {
+        this.gameManager.pause();
+        const pauseBtn = document.getElementById('pauseBtn');
+        if (pauseBtn) pauseBtn.textContent = '继续';
+      }
       card.querySelectorAll('.choice-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const choiceIndex = parseInt(e.target.closest('.choice-btn').dataset.choice);
@@ -903,20 +912,22 @@ class LifeSimulatorApp {
           btn.style.transform = 'scale(0.97)';
           setTimeout(() => {
             this.gameManager.makeChoice(choiceIndex);
+            // 选择后恢复自动推进
+            if (this.gameManager && this.gameManager.gameState.isPaused) {
+              this.gameManager.resume();
+              const pauseBtn = document.getElementById('pauseBtn');
+              if (pauseBtn) pauseBtn.textContent = '暂停';
+            }
           }, 150);
         });
       });
-
-      // Auto-select default choice after timeout when auto-playing
-      if (this.gameManager && this.gameManager.autoPlayInterval) {
-        if (this._autoChoiceTimeout) clearTimeout(this._autoChoiceTimeout);
-        this._autoChoiceTimeout = setTimeout(() => {
-          const firstChoice = card.querySelector('.choice-btn');
-          if (firstChoice) {
-            firstChoice.click();
-          }
-        }, 1500);
-      }
+    } else {
+      // 无选项：2s 后自动推进（无论是否暂停）
+      setTimeout(() => {
+        if (this.gameManager && this.gameManager.gameState.isPlaying) {
+          this.gameManager.advanceYear();
+        }
+      }, 2000);
     }
 
     // 添加到历史
@@ -976,7 +987,6 @@ class LifeSimulatorApp {
     const eventArea = document.getElementById('eventArea');
     if (!eventArea) return;
 
-    // 创建或获取指示器
     let indicator = eventArea.querySelector('.event-page-indicator');
     if (!indicator && this._eventCards.length > 1) {
       indicator = document.createElement('div');
@@ -990,24 +1000,30 @@ class LifeSimulatorApp {
       return;
     }
 
-    // 只显示最近10页的指示器
-    const maxDots = 10;
-    const startIdx = Math.max(0, this._eventCards.length - maxDots);
-    const visibleCards = this._eventCards.slice(startIdx);
-    
-    indicator.innerHTML = visibleCards.map((_, i) => {
-      const realIdx = startIdx + i;
-      const isActive = realIdx === this._eventPageIndex;
-      return `<div class="event-page-dot${isActive ? ' active' : ''}" data-page="${realIdx}"></div>`;
-    }).join('');
+    const current = this._eventPageIndex + 1;
+    const total = this._eventCards.length;
+    const hasPrev = this._eventPageIndex > 0;
+    const hasNext = this._eventPageIndex < this._eventCards.length - 1;
 
-    // 绑定点击翻页
-    indicator.querySelectorAll('.event-page-dot').forEach(dot => {
-      dot.addEventListener('click', (e) => {
-        const pageIdx = parseInt(e.target.dataset.page);
-        this._goToPage(pageIdx);
-      });
+    indicator.innerHTML = `
+      <button class="page-nav-btn ${hasPrev ? '' : 'disabled'}" data-dir="prev">‹</button>
+      <span class="page-nav-text">${current} / ${total}</span>
+      <button class="page-nav-btn ${hasNext ? '' : 'disabled'}" data-dir="next">›</button>
+    `;
+
+    indicator.querySelector('[data-dir="prev"]').addEventListener('click', () => {
+      if (this._eventPageIndex > 0) this._goToPage(this._eventPageIndex - 1);
     });
+    indicator.querySelector('[data-dir="next"]').addEventListener('click', () => {
+      if (this._eventPageIndex < this._eventCards.length - 1) this._goToPage(this._eventPageIndex + 1);
+    });
+
+    // 限制 DOM 卡片数量（最多保留 30 张，移除最旧的）
+    while (this._eventCards.length > 30) {
+      const old = this._eventCards.shift();
+      old.remove();
+      this._eventPageIndex--;
+    }
   }
 
   _removePageIndicator() {
@@ -1284,6 +1300,70 @@ class LifeSimulatorApp {
     if (hValMobile) hValMobile.textContent = Math.round(happiness);
     if (sValMobile) sValMobile.textContent = Math.round(stress);
     if (hlValMobile) hlValMobile.textContent = Math.round(health);
+
+    // === 更新始终可见的属性概览条 (game-attr-bar) ===
+    this._updateGameAttrBar(attrs, hidden);
+  }
+
+  _updateGameAttrBar(attrs, hidden) {
+    const row = document.getElementById('attrBarRow');
+    if (!row) return;
+
+    const attrNames = {
+      appearance: '颜值', intelligence: '智力', constitution: '体质',
+      family: '家境', eq: '情商', luck: '运气'
+    };
+
+    // 首次渲染
+    if (row.children.length === 0) {
+      Object.keys(attrNames).forEach(key => {
+        const item = document.createElement('div');
+        item.className = 'attr-bar-item';
+        item.id = `bar-${key}`;
+        item.innerHTML = `<span class="attr-bar-name">${attrNames[key]}</span><span class="attr-bar-value">${attrs[key] || 0}</span>`;
+        row.appendChild(item);
+      });
+    } else {
+      Object.keys(attrNames).forEach(key => {
+        const valEl = document.querySelector(`#bar-${key} .attr-bar-value`);
+        if (valEl) {
+          const oldVal = parseInt(valEl.textContent);
+          const newVal = attrs[key] || 0;
+          if (oldVal !== newVal) {
+            valEl.textContent = newVal;
+            valEl.classList.remove('flash-up', 'flash-down');
+            void valEl.offsetWidth;
+            valEl.classList.add(newVal > oldVal ? 'flash-up' : 'flash-down');
+          }
+        }
+      });
+    }
+
+    // 状态条
+    const happiness = hidden?.happiness ?? 50;
+    const stress = hidden?.stress ?? 0;
+    const health = hidden?.health ?? 70;
+    const wealth = hidden?.wealth ?? 0;
+
+    const hBar = document.getElementById('barHappiness');
+    const sBar = document.getElementById('barStress');
+    const hlBar = document.getElementById('barHealth');
+    if (hBar) hBar.style.width = `${Math.min(100, Math.max(0, happiness))}%`;
+    if (sBar) sBar.style.width = `${Math.min(100, Math.max(0, stress))}%`;
+    if (hlBar) {
+      hlBar.style.width = `${Math.min(100, Math.max(0, health))}%`;
+      if (health < 30) hlBar.classList.add('danger');
+      else hlBar.classList.remove('danger');
+    }
+
+    const hVal = document.getElementById('barHappinessVal');
+    const sVal = document.getElementById('barStressVal');
+    const hlVal = document.getElementById('barHealthVal');
+    const wVal = document.getElementById('barWealthVal');
+    if (hVal) hVal.textContent = Math.round(happiness);
+    if (sVal) sVal.textContent = Math.round(stress);
+    if (hlVal) hlVal.textContent = Math.round(health);
+    if (wVal) wVal.textContent = this.formatWealth(wealth);
   }
 
   /**
@@ -1588,35 +1668,33 @@ class LifeSimulatorApp {
   }
 
   initTabSwipe() {
-    const container = document.getElementById('mobileTabContainer');
-    if (!container) return;
+    // 只在 Tab 栏区域检测滑动，避免与事件翻页手势冲突
+    const tabBar = document.getElementById('mobileTabBar');
+    if (!tabBar) return;
     
     let startX = 0;
     let startY = 0;
     let startTime = 0;
     
-    container.addEventListener('touchstart', (e) => {
+    tabBar.addEventListener('touchstart', (e) => {
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       startTime = Date.now();
     }, { passive: true });
     
-    container.addEventListener('touchend', (e) => {
+    tabBar.addEventListener('touchend', (e) => {
       const dx = e.changedTouches[0].clientX - startX;
       const dy = e.changedTouches[0].clientY - startY;
       const dt = Date.now() - startTime;
       
-      // Only horizontal swipes, minimum 50px distance, under 500ms
       if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 500) {
         const tabs = ['event', 'attrs', 'history'];
         const currentTab = this._currentMobileTab || 'event';
         const idx = tabs.indexOf(currentTab);
         
         if (dx < 0 && idx < tabs.length - 1) {
-          // Swipe left -> next tab
           this.switchToTab(tabs[idx + 1]);
         } else if (dx > 0 && idx > 0) {
-          // Swipe right -> previous tab
           this.switchToTab(tabs[idx - 1]);
         }
       }
