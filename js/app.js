@@ -46,6 +46,9 @@ class LifeSimulatorApp {
     this.isFirstPlay = !localStorage.getItem('lifeSimulator_firstPlayDone');
     this.shareCardGenerator = new ShareCardGenerator();
     this.currentSeedCode = '';
+    this._eventCards = [];  // 翻页卡片栈
+    this._eventPageIndex = -1;  // 当前显示的卡片索引
+    this._eventPageIndicator = null;  // 页码指示器DOM
 
     this.init();
   }
@@ -80,6 +83,7 @@ class LifeSimulatorApp {
     this.showTutorial();
     // Pull-to-rebirth on mobile
     this.initPullToRebirth();
+    this.initEventPageSwipe();
     // Tab swipe gesture on mobile
     this.initTabSwipe();
   }
@@ -753,7 +757,11 @@ class LifeSimulatorApp {
   clearGameDisplay() {
     document.getElementById('ageDisplay').textContent = '0岁';
     document.getElementById('stageDisplay').textContent = '婴幼儿期';
-    document.getElementById('eventArea').innerHTML = '';
+    const eventArea = document.getElementById('eventArea');
+    eventArea.innerHTML = '';
+    this._eventCards = [];
+    this._eventPageIndex = -1;
+    this._removePageIndicator();
     document.getElementById('historyArea').innerHTML = '';
     const historyAreaDesktop = document.getElementById('historyAreaDesktop');
     if (historyAreaDesktop) historyAreaDesktop.innerHTML = '';
@@ -799,7 +807,7 @@ class LifeSimulatorApp {
     const eventArea = document.getElementById('eventArea');
     
     const card = document.createElement('div');
-    card.className = 'event-card enter-right';
+    card.className = 'event-card';
     
     let choicesHtml = '';
     if (event.choices && event.choices.length > 0) {
@@ -863,10 +871,26 @@ class LifeSimulatorApp {
       ${choicesHtml}
     `;
 
-    eventArea.appendChild(card);
+    // 翻页：将之前的卡片标记为 page-prev
+    this._eventCards.forEach(c => c.classList.remove('page-current'));
+    this._eventCards.forEach(c => c.classList.add('page-prev'));
     
-    // 滚动到底部
-    eventArea.scrollTop = eventArea.scrollHeight;
+    // 新卡片初始在右侧
+    card.classList.add('page-next');
+    eventArea.appendChild(card);
+    this._eventCards.push(card);
+    
+    // 标记为当前页
+    const newIndex = this._eventCards.length - 1;
+    this._eventPageIndex = newIndex;
+    
+    // 触发动画：从右侧滑入
+    requestAnimationFrame(() => {
+      card.classList.remove('page-next');
+      card.classList.add('page-current');
+    });
+    
+    this._updatePageIndicator();
 
     // 绑定选择按钮事件
     if (event.choices && event.choices.length > 0) {
@@ -875,14 +899,11 @@ class LifeSimulatorApp {
       card.querySelectorAll('.choice-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const choiceIndex = parseInt(e.target.closest('.choice-btn').dataset.choice);
-          // Exit animation
-          card.classList.add('selecting');
-          setTimeout(() => {
-            card.classList.add('exit-left');
-          }, 100);
+          // 按压反馈
+          btn.style.transform = 'scale(0.97)';
           setTimeout(() => {
             this.gameManager.makeChoice(choiceIndex);
-          }, 300);
+          }, 150);
         });
       });
 
@@ -890,8 +911,7 @@ class LifeSimulatorApp {
       if (this.gameManager && this.gameManager.autoPlayInterval) {
         if (this._autoChoiceTimeout) clearTimeout(this._autoChoiceTimeout);
         this._autoChoiceTimeout = setTimeout(() => {
-          // Find and click the first choice button
-          const firstChoice = document.querySelector('#eventArea .choice-btn, #eventArea .event-choice-btn');
+          const firstChoice = card.querySelector('.choice-btn');
           if (firstChoice) {
             firstChoice.click();
           }
@@ -906,16 +926,125 @@ class LifeSimulatorApp {
   displayChoiceResult(result) {
     if (result.outcomeText) {
       const eventArea = document.getElementById('eventArea');
-      const outcomeDiv = document.createElement('div');
-      outcomeDiv.className = 'event-card';
-      outcomeDiv.style.borderLeftColor = 'var(--success-color)';
-      outcomeDiv.innerHTML = `
+      const card = document.createElement('div');
+      card.className = 'event-card';
+      card.style.borderLeftColor = 'var(--success-color)';
+      card.innerHTML = `
         <div class="event-title">结果</div>
         <div class="event-desc">${result.outcomeText}</div>
       `;
-      eventArea.appendChild(outcomeDiv);
-      eventArea.scrollTop = eventArea.scrollHeight;
+
+      // 翻页：前一张标记为 prev
+      this._eventCards.forEach(c => c.classList.remove('page-current'));
+      this._eventCards.forEach(c => c.classList.add('page-prev'));
+      
+      card.classList.add('page-next');
+      eventArea.appendChild(card);
+      this._eventCards.push(card);
+      this._eventPageIndex = this._eventCards.length - 1;
+      
+      requestAnimationFrame(() => {
+        card.classList.remove('page-next');
+        card.classList.add('page-current');
+      });
+      
+      this._updatePageIndicator();
     }
+  }
+
+  // ==================== 翻页导航 ====================
+
+  _goToPage(index) {
+    if (index < 0 || index >= this._eventCards.length || index === this._eventPageIndex) return;
+    const dir = index > this._eventPageIndex ? 1 : -1; // 1=右滑(前进), -1=左滑(后退)
+    const oldCard = this._eventCards[this._eventPageIndex];
+    const newCard = this._eventCards[index];
+
+    // 旧卡片滑出
+    oldCard.classList.remove('page-current');
+    oldCard.classList.add(dir > 0 ? 'page-prev' : 'page-next');
+
+    // 新卡片滑入
+    newCard.classList.remove('page-prev', 'page-next');
+    newCard.classList.add('page-current');
+
+    this._eventPageIndex = index;
+    this._updatePageIndicator();
+  }
+
+  _updatePageIndicator() {
+    const eventArea = document.getElementById('eventArea');
+    if (!eventArea) return;
+
+    // 创建或获取指示器
+    let indicator = eventArea.querySelector('.event-page-indicator');
+    if (!indicator && this._eventCards.length > 1) {
+      indicator = document.createElement('div');
+      indicator.className = 'event-page-indicator';
+      eventArea.appendChild(indicator);
+    }
+    this._eventPageIndicator = indicator;
+
+    if (this._eventCards.length <= 1) {
+      if (indicator) indicator.remove();
+      return;
+    }
+
+    // 只显示最近10页的指示器
+    const maxDots = 10;
+    const startIdx = Math.max(0, this._eventCards.length - maxDots);
+    const visibleCards = this._eventCards.slice(startIdx);
+    
+    indicator.innerHTML = visibleCards.map((_, i) => {
+      const realIdx = startIdx + i;
+      const isActive = realIdx === this._eventPageIndex;
+      return `<div class="event-page-dot${isActive ? ' active' : ''}" data-page="${realIdx}"></div>`;
+    }).join('');
+
+    // 绑定点击翻页
+    indicator.querySelectorAll('.event-page-dot').forEach(dot => {
+      dot.addEventListener('click', (e) => {
+        const pageIdx = parseInt(e.target.dataset.page);
+        this._goToPage(pageIdx);
+      });
+    });
+  }
+
+  _removePageIndicator() {
+    const eventArea = document.getElementById('eventArea');
+    if (eventArea) {
+      const indicator = eventArea.querySelector('.event-page-indicator');
+      if (indicator) indicator.remove();
+    }
+    this._eventPageIndicator = null;
+  }
+
+  initEventPageSwipe() {
+    const eventArea = document.getElementById('eventArea');
+    if (!eventArea) return;
+
+    let startX = 0, startY = 0, startTime = 0;
+
+    eventArea.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTime = Date.now();
+    }, { passive: true });
+
+    eventArea.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      const dt = Date.now() - startTime;
+
+      // 水平滑动 > 50px，水平位移 > 垂直位移 * 1.5
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 500) {
+        if (dx < 0 && this._eventPageIndex < this._eventCards.length - 1) {
+          this._goToPage(this._eventPageIndex + 1);
+        } else if (dx > 0 && this._eventPageIndex > 0) {
+          this._goToPage(this._eventPageIndex - 1);
+        }
+      }
+    }, { passive: true });
   }
 
   updateHiddenAttrsPanel() {
