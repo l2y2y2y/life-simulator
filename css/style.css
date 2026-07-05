@@ -681,6 +681,67 @@ body::before {
   text-align: left;
 }
 
+/* Compact homepage stats row */
+.home-stats-row {
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 24px;
+}
+
+.home-stats-row .stat-item {
+  text-align: center;
+  flex: 1;
+  background: none;
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 8px 4px;
+  box-shadow: none;
+}
+
+.stat-value-coin {
+  color: var(--accent-gold) !important;
+}
+
+.stat-value-coin .coin-icon {
+  font-size: 0.8em;
+}
+
+/* Collapsible daily goals */
+.daily-goals-details {
+  margin-top: 16px;
+}
+
+.daily-goals-summary {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 8px 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.daily-goals-summary::before {
+  content: '\25B6';
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.daily-goals-details[open] .daily-goals-summary::before {
+  transform: rotate(90deg);
+}
+
+.daily-goals-details .daily-goals-card {
+  margin-top: 0;
+  border-radius: 12px;
+}
+
 .daily-goals-card .card-title {
   font-size: 12px;
   font-weight: 500;
@@ -961,40 +1022,135 @@ body::before {
 }
 
 /* ==================== 18. 属性分配页 ==================== */
-.attribute-page .points-ring {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.06);
-  margin: 0 auto 20px;
+
+/* Attribute Slider Styles */
+.attribute-slider-list {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  background: rgba(22, 22, 30, 0.4);
+  flex-direction: column;
+  gap: 16px;
+  margin: 16px 0;
 }
 
-.attribute-page .points-ring::before {
-  content: '';
-  position: absolute;
-  inset: 4px;
+.attribute-slider-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attribute-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.attribute-slider-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.attribute-slider-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  min-width: 24px;
+  text-align: right;
+}
+
+.attribute-slider-input {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border-subtle);
+  outline: none;
+}
+
+.attribute-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  background: var(--accent-gold);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.attribute-slider-input::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 .points-remaining {
-  text-align: center;
-  font-size: 18px;
-  margin-bottom: 20px;
-  color: var(--text-accent);
-  font-family: var(--font-display);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
 }
 
-.points-remaining span {
-  font-size: 28px;
-  font-weight: 700;
+.points-label {
+  /* default */
+}
+
+.points-value {
   font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 700;
   color: var(--accent-gold);
+}
+
+.attribute-presets {
+  margin: 16px 0;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+}
+
+.presets-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.presets-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-preset {
+  flex: 1;
+  min-width: 60px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(212, 175, 55, 0.08);
+  color: var(--accent-gold);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-preset:active {
+  background: rgba(212, 175, 55, 0.2);
+  transform: scale(0.96);
+}
+
+.btn-preset:hover {
+  border-color: rgba(212, 175, 55, 0.5);
 }
 
 .attribute-list {
@@ -2368,20 +2524,7 @@ body::before {
     flex-wrap: wrap;
   }
 
-  /* === ATTR OVERVIEW BAR — CRITICAL: always visible on mobile, sticky below header === */
-  .attr-overview-bar {
-    display: block !important;
-    position: sticky;
-    top: 56px; /* height of game-header */
-    z-index: 35;
-    background: rgba(12, 12, 16, 0.92);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 8px 12px;
-    margin: 0 -16px;
-    border-radius: 0;
-  }
+  /* === ATTR OVERVIEW — inside tab panel, not sticky === */
 
   .attr-overview-row {
     display: flex;
@@ -2664,33 +2807,14 @@ body::before {
     font-size: 15px;
   }
 
-  /* === Daily goals collapsible === */
-  .daily-goals-card .card-title {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  /* === Daily goals collapsible (now uses <details> element) === */
+  .daily-goals-details .daily-goals-card .card-title {
+    display: none;
   }
 
-  .daily-goals-card .card-title::after {
-    content: '\25BC';
-    font-size: 10px;
-    color: var(--text-tertiary);
-    transition: transform 0.3s;
-  }
-
-  .daily-goals-card.expanded .card-title::after {
-    transform: rotate(180deg);
-  }
-
-  .daily-goals-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .daily-goals-card.expanded .daily-goals-content {
-    max-height: 200px;
+  .daily-goals-details .daily-goals-content {
+    max-height: none;
+    overflow: visible;
   }
 
   /* === Attribute page mobile === */
@@ -2706,6 +2830,12 @@ body::before {
     width: 40px !important;
     height: 40px !important;
     font-size: 18px !important;
+  }
+
+  /* Mobile: hide old separate stats/coin */
+  .statistics-bar,
+  .fate-coin-bar {
+    display: none !important;
   }
 
   .text-hero {
@@ -3054,4 +3184,283 @@ body::before {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ==================== 49. Talent Selected Pool ==================== */
+.talent-selected-pool {
+  margin: 16px 0;
+  padding: 12px;
+  background: rgba(212, 175, 55, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+.talent-pool-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.talent-pool-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 32px;
+}
+
+.talent-pool-empty {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 32px;
+}
+
+.talent-pool-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--accent-gold);
+  animation: tagAppear 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tagAppear {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.talent-pool-remove {
+  font-size: 11px;
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 2px;
+}
+.talent-pool-remove:hover { opacity: 1; }
+
+/* ==================== 50. Event Card Animations ==================== */
+.event-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.event-card.selecting {
+  animation: cardPress 0.1s ease;
+}
+
+@keyframes cardPress {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.98); }
+  100% { transform: scale(0.98); }
+}
+
+.event-card.exit-left {
+  animation: slideOutLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideOutLeft {
+  to { opacity: 0; transform: translateX(-100%); }
+}
+
+.event-card.enter-right {
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(60px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Choice button press feedback */
+.choice-btn {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.choice-btn:active {
+  transform: scale(0.97);
+}
+
+/* ==================== 51. Attribute Change Floating Markers ==================== */
+.attr-change-marker {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  pointer-events: none;
+  animation: floatUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 10;
+}
+
+.attr-change-marker.positive {
+  color: #4ade80;
+}
+
+.attr-change-marker.negative {
+  color: #f87171;
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  70% { opacity: 1; transform: translateY(-20px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-30px) scale(0.8); }
+}
+
+/* Changed-up/down animations for attr overview items */
+.changed-up .attr-overview-value {
+  animation: pulseUp 0.5s ease;
+}
+.changed-down .attr-overview-value {
+  animation: pulseDown 0.5s ease;
+}
+
+@keyframes pulseUp {
+  0% { color: var(--color-info); transform: scale(1); }
+  30% { color: #4ade80; transform: scale(1.3); }
+  100% { color: var(--color-info); transform: scale(1); }
+}
+
+@keyframes pulseDown {
+  0% { color: var(--color-info); transform: scale(1); }
+  30% { color: #f87171; transform: scale(0.8); }
+  100% { color: var(--color-info); transform: scale(1); }
+}
+
+/* Result page collapsible details */
+.result-details-section {
+  margin-top: 16px;
+}
+
+.result-details-summary {
+  font-size: 14px;
+  color: var(--accent-gold);
+  cursor: pointer;
+  padding: 12px 16px;
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 12px;
+  list-style: none;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.result-details-summary::before {
+  content: '▼ ';
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.result-details-section[open] .result-details-summary {
+  border-radius: 12px 12px 0 0;
+  margin-bottom: -1px;
+}
+
+.result-details-section[open] .result-details-summary::before {
+  transform: rotate(180deg);
+}
+
+.result-details-section .card {
+  border-radius: 0 0 12px 12px;
+  border-top: none;
+}
+
+/* Health danger state on tab bar */
+.mobile-tab-bar.health-warning {
+  animation: tabWarningPulse 1.5s ease-in-out infinite;
+}
+
+.mobile-tab-bar.health-warning::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #f87171, #ef4444, #f87171);
+  background-size: 200% 100%;
+  animation: dangerSweep 2s linear infinite;
+}
+
+@keyframes tabWarningPulse {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 12px rgba(248, 113, 113, 0.3); }
+}
+
+@keyframes dangerSweep {
+  0% { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* History timeline styles */
+.mobile-tab-panel[data-tab="history"] .history-area {
+  padding: 0 16px 16px;
+}
+
+.mobile-tab-panel[data-tab="history"] .history-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  animation: historyFadeIn 0.3s ease;
+}
+
+.mobile-tab-panel[data-tab="history"] .history-entry:last-child {
+  border-bottom: none;
+}
+
+.history-entry-age {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-gold);
+  min-width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.history-entry-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-subtle);
+  margin-top: 5px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.history-entry-dot::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 3px;
+  width: 2px;
+  height: calc(100% + 8px);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.history-entry:last-child .history-entry-dot::after {
+  display: none;
+}
+
+.history-entry-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.history-entry.new-entry .history-entry-dot {
+  background: var(--accent-gold);
+  box-shadow: 0 0 6px rgba(212, 175, 55, 0.4);
+}
+
+.history-entry.new-entry .history-entry-text {
+  color: var(--text-primary);
+}
+
+@keyframes historyFadeIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
 }

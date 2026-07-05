@@ -80,6 +80,8 @@ class LifeSimulatorApp {
     this.showTutorial();
     // Pull-to-rebirth on mobile
     this.initPullToRebirth();
+    // Tab swipe gesture on mobile
+    this.initTabSwipe();
   }
 
   /**
@@ -124,6 +126,14 @@ class LifeSimulatorApp {
     document.getElementById('confirmAttrBtn').addEventListener('click', () => this.confirmAttributes());
     document.getElementById('backFromAttrBtn').addEventListener('click', () => this.showTalentPage());
 
+    // 属性预设按钮
+    document.querySelectorAll('.btn-preset').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const preset = e.target.dataset.preset;
+        if (preset) this.applyPreset(preset);
+      });
+    });
+
     // 游戏页
     document.getElementById('pauseBtn').addEventListener('click', () => this.togglePause());
     document.getElementById('skipBtn').addEventListener('click', () => this.skipToNextChoice());
@@ -158,16 +168,7 @@ class LifeSimulatorApp {
     // 成就页
     document.getElementById('backFromAchievementBtn').addEventListener('click', () => this.showHomePage());
 
-    // 每日目标折叠
-    const dailyGoalsCard = document.querySelector('.daily-goals-card');
-    if (dailyGoalsCard) {
-      const title = dailyGoalsCard.querySelector('.card-title');
-      if (title) {
-        title.addEventListener('click', () => {
-          dailyGoalsCard.classList.toggle('expanded');
-        });
-      }
-    }
+    // 每日目标折叠 — now handled by <details> element natively
 
     // Mobile tab switching
     const tabBtns = document.querySelectorAll('.mobile-tab-btn');
@@ -175,6 +176,7 @@ class LifeSimulatorApp {
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
+        this._currentMobileTab = tab;
         // Update buttons
         tabBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -537,6 +539,7 @@ class LifeSimulatorApp {
     }
 
     this.updateTalentCounter();
+    this.updateTalentPool();
   }
 
   updateTalentCounter() {
@@ -547,6 +550,29 @@ class LifeSimulatorApp {
     if (text) text.textContent = count;
     const btn = document.getElementById('confirmTalentsBtn');
     if (btn) btn.disabled = count !== 3;
+  }
+
+  updateTalentPool() {
+    const container = document.getElementById('talentPoolTags');
+    if (!container) return;
+    if (this.selectedTalents.length === 0) {
+      container.innerHTML = '<span class="talent-pool-empty">点击上方天赋卡片选择</span>';
+      return;
+    }
+    container.innerHTML = this.selectedTalents.map(t => 
+      `<span class="talent-pool-tag" data-talent-id="${t.id}">${t.name}<span class="talent-pool-remove" data-talent-id="${t.id}">✕</span></span>`
+    ).join('');
+    // Add click to remove
+    container.querySelectorAll('.talent-pool-remove').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.target.dataset.talentId;
+        const talent = this.selectedTalents.find(t => t.id === id);
+        if (talent) {
+          const card = document.querySelector(`.talent-card[data-talent-id="${id}"]`);
+          this.toggleTalentSelection(talent, card);
+        }
+      });
+    });
   }
 
   confirmTalents() {
@@ -567,11 +593,18 @@ class LifeSimulatorApp {
       luck: 5
     };
     this.remainingPoints = 20;
+    // Update sliders if they exist
+    for (const [key, value] of Object.entries(this.attributePoints)) {
+      const slider = document.getElementById(`slider-${key}`);
+      const valEl = document.getElementById(`attr-${key}`);
+      if (slider) slider.value = value;
+      if (valEl) valEl.textContent = value;
+    }
     this.updatePointsDisplay();
   }
 
   renderAttributeList() {
-    const list = document.getElementById('attributeList');
+    const list = document.getElementById('attributeSliderList');
     list.innerHTML = '';
 
     const attrNames = {
@@ -585,29 +618,85 @@ class LifeSimulatorApp {
 
     for (const [key, info] of Object.entries(attrNames)) {
       const item = document.createElement('div');
-      item.className = 'attribute-item';
+      item.className = 'attribute-slider-item';
       item.innerHTML = `
-        <div class="attribute-info">
-          <div class="attribute-name">${info.name}</div>
-          <div class="attribute-desc">${info.desc}</div>
+        <div class="attribute-slider-header">
+          <span class="attribute-slider-name">${info.name}</span>
+          <span class="attribute-slider-value" id="attr-${key}">${this.attributePoints[key]}</span>
         </div>
-        <div class="attribute-controls">
-          <button class="attr-btn" data-attr="${key}" data-action="decrease">-</button>
-          <div class="attribute-value" id="attr-${key}">${this.attributePoints[key]}</div>
-          <button class="attr-btn" data-attr="${key}" data-action="increase">+</button>
-        </div>
+        <input type="range" class="attribute-slider-input" id="slider-${key}" 
+               min="0" max="10" step="1" value="${this.attributePoints[key]}" 
+               data-attr="${key}">
       `;
       list.appendChild(item);
     }
 
-    // 绑定增减按钮事件
-    list.querySelectorAll('.attr-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    // Bind slider input events
+    list.querySelectorAll('.attribute-slider-input').forEach(slider => {
+      slider.addEventListener('input', (e) => {
         const attr = e.target.dataset.attr;
-        const action = e.target.dataset.action;
-        this.modifyAttribute(attr, action);
+        const newValue = parseInt(e.target.value);
+        this.setSliderAttribute(attr, newValue);
       });
     });
+  }
+
+  setSliderAttribute(attr, newValue) {
+    // Calculate what the new remaining points would be
+    const oldValue = this.attributePoints[attr];
+    const totalOther = Object.entries(this.attributePoints)
+      .filter(([k]) => k !== attr)
+      .reduce((sum, [, v]) => sum + v, 0);
+    const newTotal = totalOther + newValue;
+    const newRemaining = 50 - newTotal; // base 30 + 20 remaining = 50
+
+    if (newRemaining < 0) {
+      // Not enough points, clamp
+      const maxAllowed = 50 - totalOther;
+      const clampedValue = Math.min(10, Math.max(0, maxAllowed));
+      this.attributePoints[attr] = clampedValue;
+      const slider = document.getElementById(`slider-${attr}`);
+      if (slider) slider.value = clampedValue;
+      document.getElementById(`attr-${attr}`).textContent = clampedValue;
+    } else {
+      this.attributePoints[attr] = newValue;
+      document.getElementById(`attr-${attr}`).textContent = newValue;
+    }
+    this.remainingPoints = 50 - Object.values(this.attributePoints).reduce((a, b) => a + b, 0);
+    this.updatePointsDisplay();
+  }
+
+  applyPreset(name) {
+    this.attributePoints = {
+      appearance: 5,
+      intelligence: 5,
+      constitution: 5,
+      family: 5,
+      eq: 5,
+      luck: 5
+    };
+    const presets = {
+      scholar: { intelligence: 10, eq: 8, luck: 7 },
+      athlete: { constitution: 10, appearance: 8, luck: 7 },
+      rich: { family: 10, eq: 8, intelligence: 7 },
+      balanced: { appearance: 8, intelligence: 8, constitution: 8, family: 8, eq: 8, luck: 8 }
+    };
+    const preset = presets[name];
+    if (!preset) return;
+    Object.assign(this.attributePoints, preset);
+    // Clamp all to 0-10
+    for (const key of Object.keys(this.attributePoints)) {
+      this.attributePoints[key] = Math.min(10, Math.max(0, this.attributePoints[key]));
+    }
+    this.remainingPoints = 50 - Object.values(this.attributePoints).reduce((a, b) => a + b, 0);
+    // Update sliders and value displays
+    for (const [key, value] of Object.entries(this.attributePoints)) {
+      const slider = document.getElementById(`slider-${key}`);
+      const valEl = document.getElementById(`attr-${key}`);
+      if (slider) slider.value = value;
+      if (valEl) valEl.textContent = value;
+    }
+    this.updatePointsDisplay();
   }
 
   modifyAttribute(attr, action) {
@@ -644,9 +733,12 @@ class LifeSimulatorApp {
       }
     }
 
-    // 更新显示
+    // 更新滑块和显示
     for (const [key, value] of Object.entries(this.attributePoints)) {
-      document.getElementById(`attr-${key}`).textContent = value;
+      const slider = document.getElementById(`slider-${key}`);
+      const valEl = document.getElementById(`attr-${key}`);
+      if (slider) slider.value = value;
+      if (valEl) valEl.textContent = value;
     }
     this.updatePointsDisplay();
   }
@@ -707,7 +799,7 @@ class LifeSimulatorApp {
     const eventArea = document.getElementById('eventArea');
     
     const card = document.createElement('div');
-    card.className = 'event-card';
+    card.className = 'event-card enter-right';
     
     let choicesHtml = '';
     if (event.choices && event.choices.length > 0) {
@@ -783,9 +875,28 @@ class LifeSimulatorApp {
       card.querySelectorAll('.choice-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const choiceIndex = parseInt(e.target.closest('.choice-btn').dataset.choice);
-          this.gameManager.makeChoice(choiceIndex);
+          // Exit animation
+          card.classList.add('selecting');
+          setTimeout(() => {
+            card.classList.add('exit-left');
+          }, 100);
+          setTimeout(() => {
+            this.gameManager.makeChoice(choiceIndex);
+          }, 300);
         });
       });
+
+      // Auto-select default choice after timeout when auto-playing
+      if (this.gameManager && this.gameManager.autoPlayInterval) {
+        if (this._autoChoiceTimeout) clearTimeout(this._autoChoiceTimeout);
+        this._autoChoiceTimeout = setTimeout(() => {
+          // Find and click the first choice button
+          const firstChoice = document.querySelector('#eventArea .choice-btn, #eventArea .event-choice-btn');
+          if (firstChoice) {
+            firstChoice.click();
+          }
+        }, 1500);
+      }
     }
 
     // 添加到历史
@@ -854,11 +965,22 @@ class LifeSimulatorApp {
     `;
     const itemClassName = 'history-item';
 
-    // Mobile history (inside tab)
+    // Remove new-entry class from previous entries (mobile timeline)
+    if (historyArea) {
+      historyArea.querySelectorAll('.history-entry.new-entry').forEach(el => {
+        el.classList.remove('new-entry');
+      });
+    }
+
+    // Mobile history (inside tab) — timeline style
     if (historyArea) {
       const item = document.createElement('div');
-      item.className = itemClassName;
-      item.innerHTML = itemHtml;
+      item.className = 'history-entry new-entry';
+      item.innerHTML = `
+        <span class="history-entry-age">${this.gameManager.gameState.age}岁</span>
+        <div class="history-entry-dot"></div>
+        <div class="history-entry-text">${event.title}</div>
+      `;
       historyArea.appendChild(item);
       historyArea.scrollTop = historyArea.scrollHeight;
     }
@@ -886,6 +1008,7 @@ class LifeSimulatorApp {
 
   togglePause() {
     const btn = document.getElementById('pauseBtn');
+    if (this._autoChoiceTimeout) clearTimeout(this._autoChoiceTimeout);
     if (this.gameManager.gameState.isPaused) {
       this.gameManager.resume();
       btn.textContent = '暂停';
@@ -917,10 +1040,13 @@ class LifeSimulatorApp {
   }
 
   setGameSpeed(speed) {
-    // Adjust game manager event interval based on speed
-    if (this.gameManager && this.gameManager.eventInterval) {
-      const baseInterval = this.gameManager.eventInterval._baseInterval || 3000;
-      this.gameManager.eventInterval.interval = baseInterval / speed;
+    if (!this.gameManager) return;
+    const baseInterval = this.gameManager._baseInterval || 3000;
+    if (this.gameManager.autoPlayInterval) {
+      clearInterval(this.gameManager.autoPlayInterval);
+      this.gameManager.autoPlayInterval = setInterval(() => {
+        this.gameManager.advanceYear();
+      }, baseInterval / speed);
     }
   }
 
@@ -931,9 +1057,8 @@ class LifeSimulatorApp {
   // ==================== 移动端属性概览条 ====================
 
   updateAttrOverviewBar() {
-    if (!this.gameManager || !this.gameManager.attributeSystem) return;
-    // 兼容：检查 attributeSystem 或 attrSystem
-    const attrSystem = this.gameManager.attributeSystem || this.gameManager.attrSystem;
+    if (!this.gameManager || !(this.gameManager.attributeSystem || this.gameManager.attrSystem)) return;
+    const attrSystem = this.gameManager.attrSystem || this.gameManager.attributeSystem;
     if (!attrSystem) return;
     const attrs = attrSystem.attributes || {};
     const row = document.getElementById('attrOverviewRow');
@@ -967,6 +1092,13 @@ class LifeSimulatorApp {
               item.classList.remove('changed-up', 'changed-down');
               void item.offsetWidth; // 强制重绘
               item.classList.add(newVal > oldVal ? 'changed-up' : 'changed-down');
+              // Floating marker
+              const marker = document.createElement('span');
+              marker.className = `attr-change-marker ${newVal > oldVal ? 'positive' : 'negative'}`;
+              marker.textContent = newVal > oldVal ? `+${newVal - oldVal}` : `${newVal - oldVal}`;
+              valEl.style.position = 'relative';
+              valEl.appendChild(marker);
+              setTimeout(() => marker.remove(), 1000);
             }
           }
         }
@@ -993,6 +1125,13 @@ class LifeSimulatorApp {
     if (hlBar) {
       if (health < 30) hlBar.parentElement.classList.add('danger');
       else hlBar.parentElement.classList.remove('danger');
+    }
+
+    // Tab bar health warning
+    const tabBar = document.getElementById('mobileTabBar');
+    if (tabBar) {
+      if (health < 30) tabBar.classList.add('health-warning');
+      else tabBar.classList.remove('health-warning');
     }
 
     // Also update desktop overview bar elements (if they exist)
@@ -1301,7 +1440,58 @@ class LifeSimulatorApp {
       eventBtn.classList.add('active');
       const panel = document.querySelector('.mobile-tab-panel[data-tab="event"]');
       if (panel) panel.classList.add('active');
+      this._currentMobileTab = 'event';
     }
+  }
+
+  switchToTab(tabName) {
+    const btn = document.querySelector(`.mobile-tab-btn[data-tab="${tabName}"]`);
+    if (!btn) return;
+    document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.mobile-tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const panel = document.querySelector(`.mobile-tab-panel[data-tab="${tabName}"]`);
+    if (panel) panel.classList.add('active');
+    this._currentMobileTab = tabName;
+    if (tabName === 'event') {
+      this.clearHistoryBadge();
+    }
+  }
+
+  initTabSwipe() {
+    const container = document.getElementById('mobileTabContainer');
+    if (!container) return;
+    
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+    
+    container.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTime = Date.now();
+    }, { passive: true });
+    
+    container.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      const dt = Date.now() - startTime;
+      
+      // Only horizontal swipes, minimum 50px distance, under 500ms
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 500) {
+        const tabs = ['event', 'attrs', 'history'];
+        const currentTab = this._currentMobileTab || 'event';
+        const idx = tabs.indexOf(currentTab);
+        
+        if (dx < 0 && idx < tabs.length - 1) {
+          // Swipe left -> next tab
+          this.switchToTab(tabs[idx + 1]);
+        } else if (dx > 0 && idx > 0) {
+          // Swipe right -> previous tab
+          this.switchToTab(tabs[idx - 1]);
+        }
+      }
+    }, { passive: true });
   }
 
   updateHistoryBadge(count) {

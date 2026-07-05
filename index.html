@@ -72,35 +72,39 @@
     <div class="page home-page active" id="homePage">
       <div class="home-divider"></div>
       <h1 class="game-title">人生模拟器</h1>
-      <p class="game-subtitle letter-wide">重开你的人生，体验无限可能</p>
+      <p class="game-subtitle letter-wide">重开你的人生</p>
       
-      <div class="card-tertiary statistics-bar">
+      <div class="home-stats-row">
         <div class="stat-item">
           <div class="stat-value" id="statLifeCount">0</div>
-          <div class="stat-label">已重开次数</div>
+          <div class="stat-label">次数</div>
         </div>
         <div class="stat-item">
           <div class="stat-value" id="statHighScore">0</div>
-          <div class="stat-label">最高评分</div>
+          <div class="stat-label">最高分</div>
         </div>
         <div class="stat-item">
           <div class="stat-value" id="statAchievements">0</div>
-          <div class="stat-label">解锁成就</div>
+          <div class="stat-label">成就</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value stat-value-coin"><span class="coin-icon">G</span><span id="statFateCoins">0</span></div>
+          <div class="stat-label">命运币</div>
         </div>
       </div>
-      
-      <div class="fate-coin-bar"><span class="coin-icon">G</span> 命运币：<span id="statFateCoins">0</span></div>
       
       <button class="btn btn-primary start-btn" id="startBtn">开始新人生</button>
       <br>
       <button class="btn btn-text" id="achievementBtn">查看成就</button>
       
-      <div class="card-tertiary daily-goals-card">
-        <h3 class="card-title">每日目标</h3>
-        <div class="daily-goals-content">
-          <div id="dailyGoalsContainer"></div>
+      <details class="daily-goals-details">
+        <summary class="daily-goals-summary">每日目标</summary>
+        <div class="card-tertiary daily-goals-card">
+          <div class="daily-goals-content">
+            <div id="dailyGoalsContainer"></div>
+          </div>
         </div>
-      </div>
+      </details>
     </div>
 
     <!-- ==================== 开场过渡页（你死了） ==================== -->
@@ -131,7 +135,13 @@
         </div>
         <div class="talent-counter">已选择：<span id="talentCountText">0</span> / 3</div>
         <div class="talent-grid" id="talentGrid"></div>
-        <button class="btn btn-secondary" id="refreshTalentsBtn">刷新天赋</button>
+        <div class="talent-selected-pool" id="talentSelectedPool">
+          <div class="talent-pool-label">已选天赋</div>
+          <div class="talent-pool-tags" id="talentPoolTags">
+            <span class="talent-pool-empty">点击上方天赋卡片选择</span>
+          </div>
+        </div>
+        <button class="btn btn-secondary" id="refreshTalentsBtn">换一批</button>
       </div>
       <button class="btn btn-primary" id="confirmTalentsBtn" disabled>确认选择</button>
       <button class="btn btn-text" id="backFromTalentBtn">返回</button>
@@ -140,11 +150,22 @@
     <!-- ==================== 属性分配页 ==================== -->
     <div class="page attribute-page" id="attributePage">
       <div class="card">
-        <div class="points-ring"></div>
         <h2 class="card-title">初始属性</h2>
         <p class="card-subtitle">塑造你的起点</p>
-        <div class="points-remaining">剩余点数：<span id="pointsRemaining">20</span></div>
-        <div class="attribute-list" id="attributeList"></div>
+        <div class="points-remaining">
+          <span class="points-label">剩余点数</span>
+          <span class="points-value" id="pointsRemaining">20</span>
+        </div>
+        <div class="attribute-slider-list" id="attributeSliderList"></div>
+        <div class="attribute-presets">
+          <span class="presets-label">快速预设</span>
+          <div class="presets-buttons">
+            <button class="btn btn-preset" data-preset="scholar">学霸</button>
+            <button class="btn btn-preset" data-preset="athlete">体育生</button>
+            <button class="btn btn-preset" data-preset="rich">富二代</button>
+            <button class="btn btn-preset" data-preset="balanced">均衡</button>
+          </div>
+        </div>
         <button class="btn btn-secondary random-btn" id="randomAttrBtn">随机分配</button>
       </div>
       <button class="btn btn-primary" id="confirmAttrBtn">开始人生</button>
@@ -298,12 +319,14 @@
       
       <div class="result-tags" id="resultTags"></div>
       
-      <div class="card">
-        <h3 class="card-title">评分详情</h3>
-        <div class="score-breakdown" id="scoreBreakdown"></div>
-      </div>
-      
-      <div class="share-card" id="shareCard">
+      <details class="result-details-section">
+        <summary class="result-details-summary">查看详情</summary>
+        <div class="card">
+          <h3 class="card-title">评分详情</h3>
+          <div class="score-breakdown" id="scoreBreakdown"></div>
+        </div>
+        
+        <div class="share-card" id="shareCard">
         <div class="share-card-title">分享你的人生</div>
         <div class="share-card-content" id="shareContent"></div>
         <div class="share-card-score" id="shareScore">0分</div>
@@ -312,6 +335,7 @@
         <canvas id="shareCanvas" width="750" height="1000" style="display:none;"></canvas>
         <img id="shareImage" alt="分享卡片" style="max-width:100%;height:auto;border-radius:16px;">
       </div>
+      </details>
       <div class="result-actions-primary">
         <button class="btn btn-primary start-btn" id="restartBtn">重开人生</button>
         <button class="btn btn-secondary" id="challengeBtn">挑战模式</button>
