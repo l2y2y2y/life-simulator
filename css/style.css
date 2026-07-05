@@ -1122,8 +1122,8 @@ body::before {
 
 /* ==================== 事件区域 — Narrative focus ==================== */
 .event-area {
-  min-height: 200px;
-}
+    min-height: auto;
+  }
 
 .event-card {
   background: rgba(22, 22, 30, 0.55);
@@ -2356,6 +2356,83 @@ body::before {
   /* === Attribute overview bar (mobile only) === */
   .attr-overview-bar {
     display: block !important;
+    background: rgba(22, 22, 30, 0.45);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+
+  .attr-overview-row {
+    gap: 6px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    margin-bottom: 8px;
+  }
+
+  .attr-overview-item {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .attr-overview-name {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .attr-overview-value {
+    font-size: 18px;
+  }
+
+  .attr-overview-hidden {
+    gap: 8px;
+  }
+
+  .attr-overview-bar-item {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .attr-overview-bar-name {
+    font-size: 10px;
+  }
+
+  .attr-overview-bar-track {
+    width: 100%;
+    flex: 1;
+    min-width: 20px;
+  }
+
+  /* Hidden attrs in sidebar — also ensure visible and scrollable */
+  .hidden-attrs-panel {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .hidden-attr-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hidden-attr-name {
+    margin-bottom: 0;
+    min-width: 32px;
+    font-size: 11px;
+  }
+
+  .hidden-attr-bar {
+    flex: 1;
+  }
+
+  .hidden-attr-val {
+    min-width: 28px;
+    text-align: right;
+    font-size: 12px;
   }
 
   /* === Daily goals collapsible === */
