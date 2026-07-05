@@ -139,10 +139,9 @@ class GameManager {
     }
     this._baseInterval = 800; // 保存基础间隔
     this.autoPlayInterval = setInterval(() => {
-      if (!this.gameState.isPlaying || this.gameState.isPaused || this.gameState.waitingForChoice) {
+      if (!this.gameState.isPlaying || this.gameState.isPaused || this.gameState.waitingForChoice || this._choiceCooldown) {
         return;
       }
-
       this.advanceYear();
     }, this._baseInterval);
   }
@@ -340,11 +339,13 @@ class GameManager {
     if (result && result.success) {
       // 通知选择结果
       this.notifyChoice(result);
-
-      // 继续推演
-      this.gameState.waitingForChoice = false;
-      this.gameState.currentEvents = [];
-
+      // 1.5s 冷却后继续推演，让用户看结果
+      this._choiceCooldown = true;
+      setTimeout(() => {
+        this._choiceCooldown = false;
+        this.gameState.waitingForChoice = false;
+        this.gameState.currentEvents = [];
+      }, 1500);
       // 检查是否触发连锁事件
       if (result.nextEvents && result.nextEvents.length > 0) {
         // 可以在这里处理连锁事件

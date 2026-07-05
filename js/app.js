@@ -899,12 +899,7 @@ class LifeSimulatorApp {
     if (event.choices && event.choices.length > 0) {
       // Auto-switch to event tab when new event with choices arrives
       this.switchToEventTab();
-      // 有选项：暂停自动推进，等用户手动选择
-      if (this.gameManager && !this.gameManager.gameState.isPaused) {
-        this.gameManager.pause();
-        const pauseBtn = document.getElementById('pauseBtn');
-        if (pauseBtn) pauseBtn.textContent = '继续';
-      }
+      // GameManager 的 waitingForChoice 已暂停自动推进
       card.querySelectorAll('.choice-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const choiceIndex = parseInt(e.target.closest('.choice-btn').dataset.choice);
@@ -912,22 +907,9 @@ class LifeSimulatorApp {
           btn.style.transform = 'scale(0.97)';
           setTimeout(() => {
             this.gameManager.makeChoice(choiceIndex);
-            // 选择后恢复自动推进
-            if (this.gameManager && this.gameManager.gameState.isPaused) {
-              this.gameManager.resume();
-              const pauseBtn = document.getElementById('pauseBtn');
-              if (pauseBtn) pauseBtn.textContent = '暂停';
-            }
           }, 150);
         });
       });
-    } else {
-      // 无选项：2s 后自动推进（无论是否暂停）
-      setTimeout(() => {
-        if (this.gameManager && this.gameManager.gameState.isPlaying) {
-          this.gameManager.advanceYear();
-        }
-      }, 2000);
     }
 
     // 添加到历史
